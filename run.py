@@ -51,11 +51,11 @@ def fit(args, model, func, x_range=[-1., 1.], y_range=[-1., 1.]):
     
     # To log the process of fitting
     with torch.no_grad():
-        _xx = torch.linspace(x_range[0], x_range[1], args.density * 4, device=args.device)
-        _yy = torch.linspace(x_range[0], x_range[1], args.density * 4, device=args.device)
+        _xx = torch.linspace(x_range[0], x_range[1], args.density, device=args.device)
+        _yy = torch.linspace(x_range[0], x_range[1], args.density, device=args.device)
         _xx, _yy = torch.meshgrid(_xx, _yy)
         _xy = torch.stack([_xx, _yy], dim=-1)
-        _zz = torch.zeros([args.epochs, args.density * 4, args.density * 4], device=args.device)
+        _zz = torch.zeros([args.epochs, args.density, args.density], device=args.device)
         gt_zz = func(_xx, _yy)
         
     for epoch in trange(args.epochs):
@@ -93,8 +93,9 @@ def to_spectral(xx, yy, zz):
 if __name__ == '__main__':
     args = init()
     
-    basedir = os.path.join("export", "debug", args.fn if args.pe else f"{args.fn}_pe")
-    os.makedirs(basedir, exist_ok=True)
+    basedir = os.path.join("export", "debug", args.fn if not args.pe else f"{args.fn}_pe")
+    os.makedirs(basedir + '/img', exist_ok=True)
+    os.makedirs(basedir + '/pdf', exist_ok=True)
     
     model = LowDimMLP(layers=[2, 64, 64, 64, 1], pe=args.pe).to(args.device)
     
@@ -102,7 +103,7 @@ if __name__ == '__main__':
         "sin_euclid_lo": lambda x, y: torch.sin(torch.sqrt(x**2 + y**2) * 2 * torch.pi),
         "sin_euclid_mi": lambda x, y: torch.sin(torch.sqrt(x**2 + y**2) * 4 * torch.pi),
         "sin_euclid_hi": lambda x, y: torch.sin(torch.sqrt(x**2 + y**2) * 8 * torch.pi),
-        "sin_euclid_lo_biased": lambda x, y: torch.sin(torch.sqrt(x**2 + y**2) * 1 * torch.pi) + 0.5,
+        "sin_euclid_lo_biased": lambda x, y: torch.sin(torch.sqrt(x**2 + y**2) * 2 * torch.pi) + 0.5,
         "sin_euclid_mi_biased": lambda x, y: torch.sin(torch.sqrt(x**2 + y**2) * 4 * torch.pi) + 0.5,
         "sin_euclid_hi_biased": lambda x, y: torch.sin(torch.sqrt(x**2 + y**2) * 8 * torch.pi) + 0.5,
         "std_normal": lambda x, y: torch.exp(-(x**2 + y**2) / 2) / (2 * torch.pi),
@@ -121,9 +122,6 @@ if __name__ == '__main__':
         freq, amplitude, phrase = fft2(zz)
         freq_gt, amplitude_gt, phrase_gt = fft2(gt_zz)
         
-        freq = freq[:, 0::4, 0::4]
-        freq_gt = freq_gt[0::4, 0::4]
-        
         xx = xx.detach().cpu().numpy()
         yy = yy.detach().cpu().numpy()
         
@@ -135,8 +133,8 @@ if __name__ == '__main__':
         titles = [ f"Iter { str(t).zfill(4) }" for t in ts]
         
         viz_seq_3d(xx, yy, zz, titles, [ f"spatial_{ str(t).zfill(4) }" for t in ts], path=basedir)
-        viz_3d_surf(xx, yy, gt_zz, "", f"gt_{args.fn}", basedir)
+        viz_3d_surf(xx, yy, gt_zz, "", f"gt_{args.fn}", basedir, pdf=True)
         
         viz_spectrum_seq(freq, titles, [ f"spectrum_{ str(t).zfill(4) }" for t in ts], path=basedir)
-        viz_spectrum(freq_gt, "Amplitude", f"gt_{args.fn}", basedir, pdf=True)
+        viz_spectrum(freq_gt, "Amplitude", f"gt_spectrum_{args.fn}", basedir, pdf=True)
         

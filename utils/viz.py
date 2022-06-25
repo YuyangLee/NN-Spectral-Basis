@@ -31,14 +31,15 @@ def viz_spectrum(freq, title, label, path, pdf=False):
     plt.yticks([])
     plt.imshow(freq_view)
     plt.title(title, fontsize=32)
-    path = os.path.join(path, f"viz_{label}")
-    plt.savefig(f'{path}.png')
+    img_path = os.path.join(path, f"img/viz_{label}")
+    plt.savefig(f'{img_path}.png')
     if pdf:
-        plt.savefig(f'{path}.pdf')
+        pdf_path = os.path.join(path, f"pdf/viz_{label}")
+        plt.savefig(f'{pdf_path}.pdf')
     
 def viz_spectrum_seq(freqs, titles, labels, path, pdf=False):
     for t in range(freqs.shape[0]):
-        viz_spectrum(freqs[t], titles[t], labels[t], path, pdf)
+        viz_spectrum(freqs[t], titles[t], labels[t], path, pdf = t % 33 == 0)
 
 def viz_3d_surf(xx, yy, zz, title, label, path, pdf=False):
     fig, ax = plt.subplots(figsize=figsize, subplot_kw={"projection": "3d"})
@@ -51,11 +52,12 @@ def viz_3d_surf(xx, yy, zz, title, label, path, pdf=False):
 
     fig.colorbar(surf, shrink=0.5, aspect=5)
 
-    path = os.path.join(path, f"viz_{label}")
+    img_path = os.path.join(path, f"img/viz_{label}")
     if pdf:
-        plt.savefig(f'{path}.pdf')
+        pdf_path = os.path.join(path, f"pdf/viz_{label}")
+        plt.savefig(f'{pdf_path}.pdf')
     plt.title(title, fontsize=32)
-    plt.savefig(f'{path}.png')
+    plt.savefig(f'{img_path}.png')
     # plt.show()
 
 
@@ -69,4 +71,4 @@ def viz_seq_3d(xx, yy, zz, titles, labels, path):
         label: t
     """
     for t in range(zz.shape[0]):
-        viz_3d_surf(xx, yy, zz[t], titles[t], labels[t], path, pdf = t % 25 == 0)
+        viz_3d_surf(xx, yy, zz[t], titles[t], labels[t], path, pdf = t % 33 == 0)
