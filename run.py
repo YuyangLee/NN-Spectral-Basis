@@ -2,7 +2,7 @@
 Author: Aiden Li
 Date: 2022-06-25 14:32:26
 LastEditors: Aiden Li (i@aidenli.net)
-LastEditTime: 2022-06-25 20:30:36
+LastEditTime: 2022-06-25 22:00:36
 Description: Fit a 2D function
 '''
 import os
@@ -17,8 +17,9 @@ from tqdm import tqdm, trange
 import matplotlib.pyplot as plt
 import seaborn as sns
 from utils.model import LowDimMLP
+from utils.spectral import fft2
 
-from utils.viz import viz_seq_3d, viz_3d
+from utils.viz import viz_seq_3d, viz_3d_surf, viz_spectrum, viz_spectrum_seq
     
     
 def init():
@@ -50,11 +51,11 @@ def fit(args, model, func, x_range=[-1., 1.], y_range=[-1., 1.]):
     
     # To log the process of fitting
     with torch.no_grad():
-        _xx = torch.linspace(x_range[0], x_range[1], args.density * 4, device=args.device)
-        _yy = torch.linspace(x_range[0], x_range[1], args.density * 4, device=args.device)
+        _xx = torch.linspace(x_range[0], x_range[1], args.density, device=args.device)
+        _yy = torch.linspace(x_range[0], x_range[1], args.density, device=args.device)
         _xx, _yy = torch.meshgrid(_xx, _yy)
         _xy = torch.stack([_xx, _yy], dim=-1)
-        _zz = torch.zeros([args.epochs, args.density * 4, args.density * 4], device=args.device)
+        _zz = torch.zeros([args.epochs, args.density, args.density], device=args.device)
         gt_zz = func(_xx, _yy)
         
     for epoch in trange(args.epochs):
@@ -117,11 +118,22 @@ if __name__ == '__main__':
     xx, yy, zz, gt_zz = fit(args, model, fn, x_range=[-1., 1.], y_range=[-1., 1.])
     
     with torch.no_grad():
+        freq, amplitude, phrase = fft2(zz)
+        freq_gt, amplitude_gt, phrase_gt = fft2(gt_zz)
+        
         xx = xx.detach().cpu().numpy()
         yy = yy.detach().cpu().numpy()
+        
+        freq = freq[0::args.viz_intv]
         zz = zz.detach().cpu().numpy()[0::args.viz_intv]
         gt_zz = gt_zz.detach().cpu().numpy()
         
-        viz_seq_3d(xx, yy, zz, labels=np.arange(0, zz.shape[0]) * args.viz_intv, path=basedir)
-        viz_3d(xx, yy, gt_zz, args.fn, basedir)
+        ts = np.arange(0, zz.shape[0]) * args.viz_intv
+        titles = [ f"Iter { str(t).zfill(4) }" for t in ts]
+        
+        viz_seq_3d(xx, yy, zz, titles, [ f"spatial_{ str(t).zfill(4) }" for t in ts], path=basedir)
+        viz_3d_surf(xx, yy, gt_zz, f"gt_{args.fn}", basedir)
+        
+        viz_spectrum_seq(freq, titles, [ f"spectrum_{ str(t).zfill(4) }" for t in ts], path=basedir)
+        viz_spectrum(freq_gt, "Amplitude")
         
