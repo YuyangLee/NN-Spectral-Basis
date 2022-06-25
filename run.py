@@ -2,7 +2,7 @@
 Author: Aiden Li
 Date: 2022-06-25 14:32:26
 LastEditors: Aiden Li (i@aidenli.net)
-LastEditTime: 2022-06-25 22:13:16
+LastEditTime: 2022-06-26 01:50:41
 Description: Fit a 2D function
 '''
 import os
@@ -19,7 +19,7 @@ import seaborn as sns
 from utils.model import LowDimMLP
 from utils.spectral import fft2
 
-from utils.viz import viz_seq_3d, viz_3d_surf, viz_spectrum, viz_spectrum_seq
+from utils.viz import data_analysis, viz_seq_3d, viz_3d_surf, viz_spectrum, viz_spectrum_seq
     
     
 def init():
@@ -89,9 +89,10 @@ def to_spectral(xx, yy, zz):
         zz: t x N_x x N_y
     """
     pass
-
+    
 if __name__ == '__main__':
     args = init()
+    args.epochs = 100
     
     basedir = os.path.join("export", "debug", args.fn if not args.pe else f"{args.fn}_pe")
     os.makedirs(basedir + '/img', exist_ok=True)
@@ -124,6 +125,14 @@ if __name__ == '__main__':
         
         xx = xx.detach().cpu().numpy()
         yy = yy.detach().cpu().numpy()
+        
+        torch.save({
+            "fn": args.fn if not args.pe else f"{args.fn}_pe",
+            "xx": xx,
+            "yy": yy,
+            "zz": zz,
+            "gt_zz": gt_zz
+        }, os.path.join(basedir, f"{args.fn}.pt" if not args.pe else f"{args.fn}_pe.pt"))
         
         freq = freq[0::args.viz_intv]
         zz = zz.detach().cpu().numpy()[0::args.viz_intv]
