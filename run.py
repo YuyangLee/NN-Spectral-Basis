@@ -2,7 +2,7 @@
 Author: Aiden Li
 Date: 2022-06-25 14:32:26
 LastEditors: Aiden Li (i@aidenli.net)
-LastEditTime: 2022-06-25 22:11:43
+LastEditTime: 2022-06-25 22:13:16
 Description: Fit a 2D function
 '''
 import os
@@ -92,7 +92,6 @@ def to_spectral(xx, yy, zz):
 
 if __name__ == '__main__':
     args = init()
-    args.epochs = 200
     
     basedir = os.path.join("export", "debug", args.fn if args.pe else f"{args.fn}_pe")
     os.makedirs(basedir, exist_ok=True)
