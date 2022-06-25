@@ -100,12 +100,14 @@ if __name__ == '__main__':
     ### Agile debugging
     
     basedir = os.path.join("export", "debug", args.fn)
-    os.makedirs(basedir, exist_ok=True)
+    os.makedirs(basedir, exist_ok=True)\
     
-    fn = args.pe
+    args.pe = True
     
     model = LowDimMLP(layers=[2, 64, 64, 64, 1], pe=args.pe).to(args.device)
     
+
+    # args.fn = "sin_euclid_hi"
     fn = {
         "sin_euclid_lo": lambda x, y: torch.sin(torch.sqrt(x**2 + y**2) * 2 * torch.pi),
         "sin_euclid_mi": lambda x, y: torch.sin(torch.sqrt(x**2 + y**2) * 4 * torch.pi),
