@@ -2,7 +2,7 @@
 Author: Aiden Li
 Date: 2022-06-25 14:32:26
 LastEditors: Aiden Li (i@aidenli.net)
-LastEditTime: 2022-06-25 17:00:24
+LastEditTime: 2022-06-25 20:30:36
 Description: Fit a 2D function
 '''
 import os
@@ -18,7 +18,7 @@ import matplotlib.pyplot as plt
 import seaborn as sns
 from utils.model import LowDimMLP
 
-from utils.viz import viz_spatial_seq_3d, viz_spatial_3d
+from utils.viz import viz_seq_3d, viz_3d
     
     
 def init():
@@ -46,9 +46,7 @@ def fit(args, model, func, x_range=[-1., 1.], y_range=[-1., 1.]):
     x_len = x_range[1] - x_range[0]
     y_len = y_range[1] - y_range[0]
     
-    
     optimizer = torch.optim.Adam(params=model.parameters(), lr=args.init_lr)
-    # scheduler = torch.optim.lr_scheduler.StepLR(optimizer, step_size=600, gamma=0.1)
     
     # To log the process of fitting
     with torch.no_grad():
@@ -75,7 +73,6 @@ def fit(args, model, func, x_range=[-1., 1.], y_range=[-1., 1.]):
         loss = F.mse_loss(zz_gt, zz_pred)
         loss.backward()
         optimizer.step()
-        # scheduler.step()
         
         if epoch % 100 == 0:
             tqdm.write(f"Epoch { epoch } MSE Loss { loss }")
@@ -95,19 +92,11 @@ def to_spectral(xx, yy, zz):
 if __name__ == '__main__':
     args = init()
     
-    ### Agile debugging
-    # args.epochs = 10
-    ### Agile debugging
-    
-    basedir = os.path.join("export", "debug", args.fn)
-    os.makedirs(basedir, exist_ok=True)\
-    
-    args.pe = True
+    basedir = os.path.join("export", "debug", args.fn if args.pe else f"{args.fn}_pe")
+    os.makedirs(basedir, exist_ok=True)
     
     model = LowDimMLP(layers=[2, 64, 64, 64, 1], pe=args.pe).to(args.device)
     
-
-    # args.fn = "sin_euclid_hi"
     fn = {
         "sin_euclid_lo": lambda x, y: torch.sin(torch.sqrt(x**2 + y**2) * 2 * torch.pi),
         "sin_euclid_mi": lambda x, y: torch.sin(torch.sqrt(x**2 + y**2) * 4 * torch.pi),
@@ -121,9 +110,9 @@ if __name__ == '__main__':
         "sc_lo": lambda x, y: 0.5 * (torch.sin(x * 2 * torch.pi) + torch.cos(y * 2 * torch.pi)), 
         "sc_mi": lambda x, y: 0.5 * (torch.sin(x * 2 * torch.pi) + torch.cos(y * 4 * torch.pi)), 
         "sc_hi": lambda x, y: 0.5 * (torch.sin(x * 2 * torch.pi) + torch.cos(y * 8 * torch.pi)), 
-        "block": lambda x, y: (torch.heaviside(x - 0.5, torch.ones_like(x) * 0.5) - torch.heaviside(x + 0.5, torch.ones_like(x) * 0.5)) * (torch.heaviside(y - 0.5, torch.ones_like(x) * 0.5) - torch.heaviside(y + 0.5, torch.ones_like(x) * 0.5))
+        "block": lambda x, y: (torch.heaviside(x - 0.5, torch.ones_like(x) * 0.5) - torch.heaviside(x + 0.5, torch.ones_like(x) * 0.5)) \
+                            * (torch.heaviside(y - 0.5, torch.ones_like(x) * 0.5) - torch.heaviside(y + 0.5, torch.ones_like(x) * 0.5))
     }[args.fn]
-    
     
     xx, yy, zz, gt_zz = fit(args, model, fn, x_range=[-1., 1.], y_range=[-1., 1.])
     
@@ -133,5 +122,6 @@ if __name__ == '__main__':
         zz = zz.detach().cpu().numpy()[0::args.viz_intv]
         gt_zz = gt_zz.detach().cpu().numpy()
         
-        viz_spatial_seq_3d(xx, yy, zz, labels=np.arange(0, zz.shape[0]) * args.viz_intv, path=basedir)
-        viz_spatial_3d(xx, yy, gt_zz, args.fn, basedir)
+        viz_seq_3d(xx, yy, zz, labels=np.arange(0, zz.shape[0]) * args.viz_intv, path=basedir)
+        viz_3d(xx, yy, gt_zz, args.fn, basedir)
+        

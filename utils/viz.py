@@ -2,7 +2,7 @@
 Author: Yu Liu, Aiden Li
 Date: 2022-06-25 14:28:43
 LastEditors: Aiden Li (i@aidenli.net)
-LastEditTime: 2022-06-25 17:02:59
+LastEditTime: 2022-06-25 20:56:25
 Description: Visualization
 '''
 import os
@@ -12,26 +12,24 @@ import matplotlib.pyplot as plt
 import numpy as np
 from matplotlib import cm
 from matplotlib.ticker import LinearLocator
+# from .spectral import fft2
+
+import seaborn as sns
+sns.set()
 
 figsize = (16, 16)
 
-def viz_spatial_2d(xx, yy, zz, label, path):
+def viz_2d(xx, yy, zz, label, path):
     pass
 
-def viz_spatial_seq_2d(xx, yy, zz, labels, path):
-    pass
-
-def viz_spectral(amplitude, phase, label, path):
-    pass
-
-def viz_spectral_seq(amplitudes, phases, labels, path):
+def viz_seq_2d(xx, yy, zz, labels, path):
     pass
 
 
-def viz_spatial_3d(xx, yy, zz, label, path, pdf=False):
+def viz_3d(xx, yy, zz, label, path, pdf=False):
     fig, ax = plt.subplots(figsize=figsize, subplot_kw={"projection": "3d"})
     surf = ax.plot_surface(xx, yy, zz, cmap=cm.coolwarm, linewidth=0, antialiased=False)
-    ax.set_zlim(-2.0, 2.0)
+    ax.set_zlim(-1.0, 1.0)
     ax.set_xlim(-1.5, 1.5)
     ax.set_ylim(-1.5, 1.5)
     ax.zaxis.set_major_locator(LinearLocator(10))
@@ -44,10 +42,10 @@ def viz_spatial_3d(xx, yy, zz, label, path, pdf=False):
     plt.savefig(f'{path}.png')
     if pdf:
         plt.savefig(f'{path}.pdf')
-    # plt.show()
+    plt.show()
 
 
-def viz_spatial_seq_3d(xx, yy, zz, labels, path):
+def viz_seq_3d(xx, yy, zz, labels, path):
     """Visualize a 3D Spatial sequence to video
 
     Args:
@@ -60,7 +58,7 @@ def viz_spatial_seq_3d(xx, yy, zz, labels, path):
     video_path = os.path.join(path, 'viz_spatial_seq.mp4')
     # writer = cv2.VideoWriter(video_path, -1, T, size)
     for t in range(T):
-        viz_spatial_3d(xx, yy, zz[t], labels[t], path, pdf = t % 25 == 0)
+        viz_3d(xx, yy, zz[t], labels[t], path, pdf = t % 25 == 0)
 
         # path = f"viz_spatial_seq{str(labels[t]).zfill(4)}"
         # img = cv2.imread(path + '.png')
