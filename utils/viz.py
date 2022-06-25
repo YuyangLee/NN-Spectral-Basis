@@ -2,7 +2,7 @@
 Author: Yu Liu, Aiden Li
 Date: 2022-06-25 14:28:43
 LastEditors: Aiden Li (i@aidenli.net)
-LastEditTime: 2022-06-25 21:59:52
+LastEditTime: 2022-06-25 22:11:06
 Description: Visualization
 '''
 import os
@@ -27,6 +27,8 @@ def viz_spectrum(freq, title, label, path, pdf=False):
     # viz_3d_surf(np.arange(freq_view.shape[0]), np.arange(freq_view.shape[0]), freq_view, title, f"{label}_3d_", path)
     fig, ax = plt.subplots(figsize=figsize)
     ax.axis('auto')
+    plt.xticks([])
+    plt.yticks([])
     plt.imshow(freq_view)
     plt.title(title, fontsize=32)
     path = os.path.join(path, f"viz_{label}")
